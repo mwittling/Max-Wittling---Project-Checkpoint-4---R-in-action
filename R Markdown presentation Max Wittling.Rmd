@@ -1,0 +1,104 @@
+---
+title: "R in Action - GDP Per Capita,PPPs to Region and Year"
+author: "Max Wittling"
+date: "3/8/2020"
+output:
+  slidy_presentation: default
+  html_document: default
+  ioslides_presentation: default
+  pdf_document: default
+  powerpoint_presentation: default
+  beamer_presentation: default
+  word_document: default
+email: mPPPsClean <- PPPs %>% gather(`X1990`, `X1991`, `X1992`, `X1993`, `X1994`,
+  `X1995`, `X1996`, `X1997`, `X1998`,`X1999`, `X2000`, `X2001`, `X2002`, `X2003`,
+  `X2004`, `X2005`, `X2006`, `X2007`, `X2008`, `X2009`, `X2010`, `X2011`, `X2012`,
+  `X2013`, `X2014`, `X2015`, `X2016`, `X2017`, `X2018`,  key = "year", value = "GDP
+  per capita,PPP")wittling6@gatech.edu
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(ggplot2)
+library(tidyr)
+library(tidyverse)
+library(skimr)
+library(Hmisc)
+PPPs = read.csv("C:\\Users\\maxwi\\Documents\\Max\\Max Education\\R\\Datasets\\Geographic PPPs.csv")
+PPPsClean <- PPPs %>%
+  gather(`X1990`, `X1991`, `X1992`, `X1993`, `X1994`, `X1995`, `X1996`, `X1997`, `X1998`,`X1999`, `X2000`, `X2001`, `X2002`, `X2003`, `X2004`, `X2005`, `X2006`, `X2007`, `X2008`, `X2009`, `X2010`, `X2011`, `X2012`, `X2013`, `X2014`, `X2015`, `X2016`, `X2017`, `X2018`,  key = "year", value = "GDP per capita,PPP")
+```
+
+## GDP per capita, PPP (current international $) - United States, 
+
+Data found at:
+<https://data.worldbank.org/indicator/NY.GDP.PCAP.PP.CD?contextual=default&locations=US-CO-CN-NO-ZA&view=chart>
+
+The data set lists and compares the reported Purchase Power Parities (PPP’s) of the regions of Europe & Central Asia, East Asia & Pacific (IDA & IBRD countries), North America, Sub-Saharan Africa, Middle East & North Africa, and Latin America & Caribbean. 
+
+
+
+
+
+## What is PPP?
+PPP is a popular metric that is often used by economists to measure the purchasing power of one country to another through comparison of the relative values of a diverse and globally demanded basket of goods which, while not faultless, gives a good idea of the purchasing power within/of a country (especially in terms of trade for non-service, exportable goods).
+
+
+## Why I Chose This Dataset
+I picked this dataset in order to observe and quantify the correlation, or lack thereof, in the growth of relative purchasing power throughout the world’s regions over the last 20 years.
+
+
+## Slide
+I picked this dataset in order to observe and quantify the correlation, or lack thereof, in the growth of relative purchasing power throughout the world’s regions over the last 20 years.
+From this data I hope to build a case for whether each region is truly better off with globalization, and if some countries and/or regions have been made better off than others. 
+
+## A look at Europe & Central Asia
+
+```{r, message=FALSE, warning=FALSE}
+EuropeCenAsia <- select(filter(PPPs, Country.Name=="Europe & Central Asia"), -(2:4))
+
+"Eur&CenAsia" <- EuropeCenAsia %>%
+    gather(`X1990`, `X1991`, `X1992`, `X1993`, `X1994`, `X1995`, `X1996`, `X1997`, `X1998`,`X1999`, `X2000`, `X2001`, `X2002`, `X2003`, `X2004`, `X2005`, `X2006`, `X2007`, `X2008`, `X2009`, `X2010`, `X2011`, `X2012`, `X2013`, `X2014`, `X2015`, `X2016`, `X2017`, `X2018`,  key = "year", value = "GDP per capita,PPP")
+
+ggplot(`Eur&CenAsia`, aes(year,`GDP per capita,PPP`)) +  geom_line(aes(group = Country.Name)) + ggtitle("Europe and Central Asia") + scale_x_discrete(limits=c("X1990","X1995","X2000","x2005","X2010", "X2015","X2018"))
+
+```
+
+## All the Regions of the World
+
+```{r, message = FALSE, warning = FALSE, fig.width=7}
+ggplot(PPPsClean, aes(year,`GDP per capita,PPP`)) +  geom_line(aes(group = Country.Name), color = "grey50") + geom_point(aes(color = Country.Name)) + theme(text = element_text(size=8)) + scale_x_discrete(limits=c("X1990","X1995","X2000","x2005","X2010", "X2015","X2018"))
+
+```
+
+## Regression - Does PPP depend on Region and Year? How has the relationship changed over time?
+
+```{r, echo = FALSE, results='hide'}
+PPPslmregres1 <- lm(`GDP per capita,PPP` ~ year, data = PPPsClean)
+PPPslmregre2<- lm(`GDP per capita,PPP` ~ Country.Name, data = PPPsClean)
+PPPslmregre3<- lm(`GDP per capita,PPP` ~ Country.Name + year, data = PPPsClean)
+```
+
+\tiny
+```{r, message = FALSE, warning = FALSE, class_output = ".bordered" }
+  summary(PPPslmregre3)
+```
+\normalsize
+
+These two variables - region and year - explain 94.16% of the data, also,
+notice the negative t value for Sub-Saharan Africa and the crazy high t value for North America compared to the rest.
+
+Notice how the years predict the PPP more and more accurately as time goes on, this allows us to inference that globaliztion has been responsible for the increasing world PPP's with 99.999% certainty from 2006 on
+
+
+
+
+## Plot
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, }
+plot(PPPslmregre3, which = c(1,2))
+```
+
+- Ordinary least squares regression relies on several assumptions, including that the residuals are normally distributed and homoscedastic, the errors are independent and the relationships are linear.
+- We investigate these assumptions by visually by plotting our model
+
